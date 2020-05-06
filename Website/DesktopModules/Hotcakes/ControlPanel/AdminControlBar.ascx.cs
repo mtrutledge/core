@@ -2,7 +2,7 @@
 
 // Distributed under the MIT License
 // ============================================================
-// Copyright (c) 2016 Hotcakes Commerce, LLC
+// Copyright (c) 2019 Hotcakes Commerce, LLC
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 // and associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -35,13 +35,17 @@ using MenuItem = Hotcakes.Modules.Core.Admin.AppCode.MenuItem;
 using DotNetNuke.Entities.Users;
 using DotNetNuke.Entities.Controllers;
 using System.Reflection;
+using DotNetNuke.Services.Localization;
 
 namespace Hotcakes.Modules.ControlPanel
 {
     public partial class AdminControlBar : ControlPanelBase
     {
         #region Protected Methods
-
+        protected string GetString(string key)
+        {
+            return Localization.GetString(key, LocalResourceFile);
+        }
         protected string GetUrl(IDataItemContainer cont)
         {
             var mi = cont.DataItem as MenuItem;
