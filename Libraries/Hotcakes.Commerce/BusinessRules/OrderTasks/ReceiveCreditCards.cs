@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using Hotcakes.Commerce.Payment;
 using System.Linq;
+using System.Text;
 
 namespace Hotcakes.Commerce.BusinessRules.OrderTasks
 {
@@ -101,7 +102,22 @@ namespace Hotcakes.Commerce.BusinessRules.OrderTasks
 			return result;
 		}
 
-		private bool ProcessTransaction(OrderTaskContext context, OrderTransaction p)
+        public string FlattenException(Exception exception)
+        {
+            var stringBuilder = new StringBuilder();
+
+            while (exception != null)
+            {
+                stringBuilder.AppendLine(exception.Message);
+                stringBuilder.AppendLine(exception.StackTrace);
+
+                exception = exception.InnerException;
+            }
+
+            return stringBuilder.ToString();
+        }
+
+        private bool ProcessTransaction(OrderTaskContext context, OrderTransaction p)
 		{
 			bool result = true;
 
@@ -113,7 +129,23 @@ namespace Hotcakes.Commerce.BusinessRules.OrderTasks
 				t.Card = p.CreditCard;
 				t.Card.SecurityCode = context.Inputs.GetProperty("hcc", "CardSecurityCode");
 				t.Amount = p.Amount;
-                t.Items = GetLineItemsForTransaction(context, orderNumber);
+
+                try
+                {
+                    t.Items = GetLineItemsForTransaction(context, orderNumber);
+                }
+                catch(Exception getItemsException)
+                {
+                    string flatExceptionDetails = FlattenException(getItemsException);
+                    EventLog.LogEvent("ReceiveCreditCards", flatExceptionDetails, Web.Logging.EventLogSeverity.Error);
+
+                    OrderNote note = new OrderNote();
+                    note.IsPublic = false;
+                    note.Note = "Error occurred getting line items for transaction during payment. Payment will continue. Store ID: " + context.Order.StoreId.ToString() + " Exception details: ----------" + flatExceptionDetails;
+                    context.Order.Notes.Add(note);
+
+                    t.Items = new List<TransactionItem>();
+                }
 
 				if (context.HccApp.CurrentStore.Settings.PaymentCreditCardAuthorizeOnly)
 				{
