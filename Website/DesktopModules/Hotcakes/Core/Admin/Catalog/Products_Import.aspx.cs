@@ -124,9 +124,10 @@ namespace Hotcakes.Modules.Core.Admin.Catalog
 		{
 			var conf = objConfiguration as ImportConfiguration;
 
-			HccRequestContext.Current = conf.HccRequestContext;
-			DnnGlobal.SetPortalSettings(conf.DnnPortalSettings);
-			Factory.HttpContext = conf.HttpContext;
+            Factory.HttpContext = conf.HttpContext;
+            HccRequestContext.Current = conf.HccRequestContext;
+
+            DnnGlobal.SetPortalSettings(conf.DnnPortalSettings);
 			CultureSwitch.SetCulture(HccApp.CurrentStore, conf.DnnPortalSettings);
 
 			var manager = new SessionManager(conf.Session);
